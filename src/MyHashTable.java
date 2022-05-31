@@ -1,12 +1,27 @@
-public class MyHashTable<K, V> {
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class MyHashTable<Key, Value> {
+    private final int capacity;
+    private int size;
+    private final Key[] keys;
+    private final Value[] values;
+    private int maxProbe = 0;
+    private int numEntries = 0;
+
+    private ArrayList<Integer> histogram = new ArrayList<>();
+
     /**
      * o creates a hash table with capacity number of buckets (for this assignment you will
      * use capacity 215 = 32768)
      * o K is the type of the keys
      * o V is the type of the values
      */
-    public <K, V> MyHashTable(int capacity){
-
+    public MyHashTable(int capacity){
+        this.capacity = capacity;
+        keys = (Key[]) new Object[capacity];
+        values = (Value[]) new Object[capacity];
+        histogram.add(0);
     }
 
     /**
@@ -15,8 +30,33 @@ public class MyHashTable<K, V> {
      * @param searchKey
      * @param newValue
      */
-    public void put(K searchKey, V newValue){
+    public void put(Key searchKey, Value newValue){
+        if(searchKey != null && newValue != null){
+            int keyHash = hash(searchKey);
+            int numProbes = 0;
 
+            while(keys[keyHash] != null && !keys[keyHash].equals(searchKey)){
+                keyHash = (keyHash + 1) % capacity;
+                numProbes++;
+            }
+
+            if(numProbes > maxProbe){
+                for(int i = 0; i < (numProbes - maxProbe); i++){
+                    histogram.add(0);
+                }
+                maxProbe = numProbes;
+            }
+
+            if(keys[keyHash] == null){
+                int incrementEntry = histogram.get(numProbes) + 1;
+                keys[keyHash] = searchKey;
+                size++;
+                histogram.remove(numProbes);
+                histogram.add(numProbes, incrementEntry);
+            }
+
+            values[keyHash] = newValue;
+        }
     }
 
     /**
@@ -26,8 +66,18 @@ public class MyHashTable<K, V> {
      * @param searchKey
      * @return
      */
-    public V get(K searchKey){
+    public Value get(Key searchKey){
+        Value output = null;
 
+        if(searchKey != null){
+            if(containsKey(searchKey)){
+                output = values[hash(searchKey)];
+            }else{
+                throw new ArrayStoreException(searchKey + " not in hash table");
+            }
+        }
+
+        return output;
     }
 
     /**
@@ -35,8 +85,11 @@ public class MyHashTable<K, V> {
      * @param searchKey
      * @return
      */
-    public boolean containsKey(K searchKey){
-
+    public boolean containsKey(Key searchKey){
+        if(keys[hash(searchKey)] != null && keys[hash(searchKey)].equals(searchKey)){
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -48,7 +101,18 @@ public class MyHashTable<K, V> {
      * found after 66 probes in my implementation, so my histogram has 66 entries.
      */
     public void stats(){
-
+        System.out.println("Hash Table Stats");
+        System.out.println("================");
+        System.out.println("Number of Entries: " + size);
+        System.out.println("Number of Buckets: " + capacity);
+        System.out.print("Histogram of Probes: [");
+        for(int i = 0; i < histogram.size() - 1; i++){
+            System.out.print(histogram.get(i) + ", ");
+        }
+        System.out.print(histogram.get(histogram.size() - 1) + "]");
+        System.out.println();
+        System.out.println("Max Linear Probe: " + maxProbe);
+        System.out.println("Fill Percentage: " + ((double)size/(double) capacity) * 100 + "%");
     }
 
     /**
@@ -56,8 +120,8 @@ public class MyHashTable<K, V> {
      * @param key
      * @return
      */
-    private int hash(K key){
-
+    private int hash(Key key){
+        return Math.abs(key.hashCode()) % capacity;
     }
 
     /**
@@ -65,7 +129,23 @@ public class MyHashTable<K, V> {
      * @return
      */
     public String toString(){
+        StringBuilder string = new StringBuilder("[");
+        int printed = 0;
 
+        for(int i = 0; i < capacity; i++){
+            if(keys[i] != null){
+                if(printed != size - 1){
+                    string.append("(" + keys[i] + ", " + values[i] + "), ");
+                    printed++;
+                }else{
+                    string.append("(" + keys[i] + ", " + values[i] + ")");
+                }
+            }
+        }
+
+        string.append("]");
+
+        return string.toString();
     }
 }
 

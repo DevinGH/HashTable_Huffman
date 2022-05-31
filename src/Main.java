@@ -12,7 +12,9 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
+        Main test = new Main();
 
+        test.testMyHashTable();
     }
 
     /**
@@ -27,6 +29,16 @@ public class Main {
      * o this method tests the hash table.
      */
     public void testMyHashTable(){
+        MyHashTable<String, String> testtable = new MyHashTable<String, String>(10000);
 
+        for(int i = 0; i < 10000; i++){
+            testtable.put("" + i, "" + (i+1));
+        }
+
+        //System.out.println(testtable.toString());
+        //System.out.println(testtable.containsKey("no"));
+        //System.out.println(testtable.get("Maybe"));
+        //System.out.println(testtable.get("maybe"));  //Example of key not being in table
+        testtable.stats();
     }
 }
