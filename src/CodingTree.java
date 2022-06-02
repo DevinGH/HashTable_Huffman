@@ -26,7 +26,8 @@ public class CodingTree {
      */
     public CodingTree(String fulltext){
         this.text = fulltext;
-
+        parseWords();
+        System.out.println(wordsAndSeparators.toString());
         System.out.println(frequencies.toString());
     }
 
@@ -34,21 +35,49 @@ public class CodingTree {
      * Separates out every word and separator into a linked list
      */
     private void parseWords(){
+        char[] allChars = text.toCharArray();
 
+        StringBuilder currentWord  = new StringBuilder();
+        boolean isWord = false;
+
+        for(Character c : allChars){
+            if(isWordChar(c)){
+                currentWord.append(c);
+                isWord = true;
+            }else{
+                if(isWord){
+                    wordsAndSeparators.add(currentWord.toString());
+                    isWord = false;
+                    currentWord = new StringBuilder();
+                }
+
+                wordsAndSeparators.add(c.toString());
+            }
+        }
+
+        countFrequencies();
     }
 
     /**
      * Counts the frequencies of each word and separator
      */
     private void countFrequencies(){
+        for(String str : wordsAndSeparators){
+            if(frequencies.containsKey(str)){
+                int prevValue = frequencies.get(str);
 
+                frequencies.put(str, prevValue + 1);
+            }else{
+                frequencies.put(str, 1);
+            }
+        }
     }
 
     /**
      * Creates the Huffman tree based on the frequencies
      */
     private void createTree(){
-
+        PriorityQueue<HuffmanNode> tree = new PriorityQueue<>();
     }
 
     /**
@@ -83,7 +112,7 @@ public class CodingTree {
 }
 
 class HuffmanNode implements  Comparable<HuffmanNode>{
-    private int weight;
+    private Integer weight;
 
     private String word;
 
@@ -91,7 +120,7 @@ class HuffmanNode implements  Comparable<HuffmanNode>{
 
     private HuffmanNode rightN;
 
-    public HuffmanNode(String word, int weight){
+    public HuffmanNode(String word, Integer weight){
         this.word = word;
         this.weight = weight;
     }
@@ -104,14 +133,6 @@ class HuffmanNode implements  Comparable<HuffmanNode>{
     }
     @Override
     public int compareTo(HuffmanNode other){
-        if(this.weight < other.weight){
-            return -1;
-        }
-        else if(this.weight > other.weight){
-            return 1;
-        }else{
-            return 0;
-        }
-
+        return this.weight.compareTo(other.weight);
     }
 }
