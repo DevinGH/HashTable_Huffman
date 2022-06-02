@@ -14,7 +14,7 @@ public class Main {
     public static void main(String[] args) {
         Main test = new Main();
 
-        test.testMyHashTable();
+        test.testCodingTree();
     }
 
     /**
@@ -22,7 +22,20 @@ public class Main {
      * correctness.
      */
     public void testCodingTree(){
+        String testMessage = "Yo wahts up! I want to see the stars. Do you?";
 
+        String[] yep = testMessage.split("\\.");
+
+        StringBuilder newString = new StringBuilder();
+
+        System.out.println("String: " + testMessage);
+        for(String str: yep){
+            System.out.println("Str: " + str);
+        }
+
+        System.out.println(newString.toString());
+
+        CodingTree tree = new CodingTree(testMessage);
     }
 
     /**

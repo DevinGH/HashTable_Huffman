@@ -7,7 +7,6 @@ public class MyHashTable<Key, Value> {
     private final Key[] keys;
     private final Value[] values;
     private int maxProbe = 0;
-    private int numEntries = 0;
 
     private ArrayList<Integer> histogram = new ArrayList<>();
 
