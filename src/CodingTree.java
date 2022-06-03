@@ -10,7 +10,7 @@ public class CodingTree {
     /**
      * o a data member that is the message encoded using the Huffman codes.
      */
-    private List<Byte> bits;
+    private String bits;
     private PriorityQueue<HuffmanNode> tree = new PriorityQueue<>();
     private MyHashTable<String, Integer> frequencies = new MyHashTable<>(100);
     private String text;
@@ -118,6 +118,8 @@ public class CodingTree {
             encodedText.append(codes.get(str));
         }
 
+        bits = encodedText.toString();
+
         System.out.println(encodedText.toString());
 
         while(encodedText.toString().length() % 8 != 0){
@@ -159,7 +161,14 @@ public class CodingTree {
      * @return
      */
     public String decode(String bits, MyHashTable<String, String> codes){
-        return "";
+        StringBuilder decodedText = new StringBuilder();
+
+
+        for(int i = 0; i < bits.length(); i++){
+
+        }
+
+        return decodedText.toString();
     }
 
     private void createFiles(){
