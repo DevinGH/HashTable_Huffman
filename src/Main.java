@@ -22,7 +22,7 @@ public class Main {
      * correctness.
      */
     public void testCodingTree(){
-        String testMessage = "Yo wahts up! I want to see the stars. Do you?";
+        String testMessage = "Yo wahts up! I want to see the stars. Do you? you want some up stars? cause that pleases me you you you you . stars";
 
         CodingTree tree = new CodingTree(testMessage);
     }

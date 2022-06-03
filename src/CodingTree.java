@@ -5,18 +5,17 @@ public class CodingTree {
      * a hash table of words or separators used as keys to retrieve strings of 1s and 0s
      * as values.
      */
-    private MyHashTable<String, String> codes;
+    private MyHashTable<String, String> codes = new MyHashTable<>(100);
 
     /**
      * o a data member that is the message encoded using the Huffman codes.
      */
     private List<Byte> bits;
-
+    private PriorityQueue<HuffmanNode> tree = new PriorityQueue<>();
     private MyHashTable<String, Integer> frequencies = new MyHashTable<>(100);
-
     private String text;
-
     private LinkedList<String> wordsAndSeparators = new LinkedList<>();
+    private LinkedList<String> keys = new LinkedList<>();
 
     /**
      * o a constructor that takes the text of an English message to be compressed.
@@ -27,8 +26,9 @@ public class CodingTree {
     public CodingTree(String fulltext){
         this.text = fulltext;
         parseWords();
-        System.out.println(wordsAndSeparators.toString());
-        System.out.println(frequencies.toString());
+        countFrequencies();
+        createTree();
+        encode();
     }
 
     /**
@@ -40,22 +40,25 @@ public class CodingTree {
         StringBuilder currentWord  = new StringBuilder();
         boolean isWord = false;
 
-        for(Character c : allChars){
-            if(isWordChar(c)){
-                currentWord.append(c);
+        for(int i = 0; i < allChars.length; i++){
+            if(isWordChar(allChars[i])){
+                currentWord.append(allChars[i]);
                 isWord = true;
-            }else{
+            }
+            if(!isWordChar(allChars[i]) || i == allChars.length - 1){
                 if(isWord){
                     wordsAndSeparators.add(currentWord.toString());
                     isWord = false;
                     currentWord = new StringBuilder();
                 }
 
-                wordsAndSeparators.add(c.toString());
+                if(i != allChars.length - 1){
+                    currentWord.append(allChars[i]);
+                    wordsAndSeparators.add(currentWord.toString());
+                    currentWord = new StringBuilder();
+                }
             }
         }
-
-        countFrequencies();
     }
 
     /**
@@ -64,11 +67,12 @@ public class CodingTree {
     private void countFrequencies(){
         for(String str : wordsAndSeparators){
             if(frequencies.containsKey(str)){
-                int prevValue = frequencies.get(str);
+                int newValue = frequencies.get(str) + 1;
+                frequencies.put(str, newValue);
 
-                frequencies.put(str, prevValue + 1);
             }else{
                 frequencies.put(str, 1);
+                keys.add(str);
             }
         }
     }
@@ -77,14 +81,62 @@ public class CodingTree {
      * Creates the Huffman tree based on the frequencies
      */
     private void createTree(){
-        PriorityQueue<HuffmanNode> tree = new PriorityQueue<>();
+        System.out.println(keys.toString());
+
+        for(String str : keys){
+                tree.add(new HuffmanNode(str, frequencies.get(str)));
+        }
+
+        while(tree.size() > 1){
+            tree.add(new HuffmanNode(tree.poll(), tree.poll()));
+        }
+
+        getCodes(tree.peek(), "");
+
+        System.out.println(codes.toString());
     }
 
     /**
      * Creates and writes each code for words and separators to a hash table
      */
-    private void getCodes(){
+    private void getCodes(HuffmanNode root, String code){
+        if(root.getLeftN() != null){
+            getCodes(root.getLeftN(), code + "0");
+        }
+        if(root.getRightN() != null){
+            getCodes(root.getRightN(), code + "1");
+        }
+        if(root.getRightN() == null && root.getLeftN() == null){
+            codes.put(root.getWord(), code);
+        }
+    }
 
+    private void encode(){
+        StringBuilder encodedText = new StringBuilder();
+
+        for(String str : wordsAndSeparators){
+            encodedText.append(codes.get(str));
+        }
+
+        System.out.println(encodedText.toString());
+
+        while(encodedText.toString().length() % 8 != 0){
+            encodedText.append("1");
+        }
+
+        System.out.println(encodedText.toString());
+
+        BitSet outputBitSet = new BitSet(encodedText.toString().length());
+        int bitCounter = 0;
+
+        for(Character c : encodedText.toString().toCharArray()){
+            if(c.equals('1')){
+                outputBitSet.set(bitCounter);
+            }
+            bitCounter++;
+        }
+
+        System.out.println(outputBitSet.toString());
     }
 
     /**
@@ -109,6 +161,10 @@ public class CodingTree {
     public String decode(String bits, MyHashTable<String, String> codes){
         return "";
     }
+
+    private void createFiles(){
+
+    }
 }
 
 class HuffmanNode implements  Comparable<HuffmanNode>{
@@ -130,6 +186,18 @@ class HuffmanNode implements  Comparable<HuffmanNode>{
         this.rightN = rightN;
 
         this.weight = leftN.weight + rightN.weight;
+    }
+
+    public HuffmanNode getLeftN(){
+        return this.leftN;
+    }
+
+    public HuffmanNode getRightN(){
+        return this.rightN;
+    }
+
+    public String getWord(){
+        return this.word;
     }
     @Override
     public int compareTo(HuffmanNode other){
