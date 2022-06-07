@@ -1,21 +1,58 @@
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class CodingTree {
+    private final int MAX_CAPACITY = 32768;
+
     /**
      * a hash table of words or separators used as keys to retrieve strings of 1s and 0s
      * as values.
      */
-    private MyHashTable<String, String> codes = new MyHashTable<>(100);
+    private MyHashTable<String, String> codes = new MyHashTable<>(MAX_CAPACITY);
 
     /**
      * o a data member that is the message encoded using the Huffman codes.
      */
     private String bits;
+
+    /**
+     * Priority queue that stores the Huffman tree
+     */
     private PriorityQueue<HuffmanNode> tree = new PriorityQueue<>();
-    private MyHashTable<String, Integer> frequencies = new MyHashTable<>(100);
+
+    /**
+     * A hash table that contains words and separators with their respected frequencies
+     */
+    private MyHashTable<String, Integer> frequencies = new MyHashTable<>(MAX_CAPACITY);
+
+    /**
+     * A string that stores the original text string
+     */
     private String text;
+
+    /**
+     * A linked list that stores the entire list of individual words and separators
+     */
     private LinkedList<String> wordsAndSeparators = new LinkedList<>();
+
+    /**
+     * A linked list that stores every individual key
+     */
     private LinkedList<String> keys = new LinkedList<>();
+
+    /**
+     * Linked list that stores every key encoded form
+     */
+    private LinkedList<String> encodedKeys = new LinkedList<>();
+
+    /**
+     * Hash table that stores the encoded key with it's decoded self
+     */
+    private MyHashTable<String, String> decodeCodes = new MyHashTable<>(MAX_CAPACITY);
 
     /**
      * o a constructor that takes the text of an English message to be compressed.
@@ -23,12 +60,31 @@ public class CodingTree {
      * coding algorithm and ensuring that the following property has the correct value.
      * @param fulltext
      */
-    public CodingTree(String fulltext){
+    public CodingTree(String fulltext) throws IOException{
+        //double startTime = System.currentTimeMillis();
         this.text = fulltext;
+        //System.out.println("Got Text");
         parseWords();
+        //System.out.println("Parsed Words");
+        //double endTime = System.currentTimeMillis();
+        //System.out.println("Parsed Words in: " + (endTime - startTime)/1000 + " seconds");
         countFrequencies();
+        //System.out.println("Got Frequencies");
+        //endTime = System.currentTimeMillis();
+        //System.out.println("Got Frequencies in: " + (endTime - startTime)/1000 + " seconds");
         createTree();
+        //System.out.println("Created Tree");
+        //endTime = System.currentTimeMillis();
+       // System.out.println("Created Tree in: " + (endTime - startTime)/1000 + " seconds");
         encode();
+        //System.out.println("Encoded Text");
+        //endTime = System.currentTimeMillis();
+        //System.out.println("Encoded Text in: " + (endTime - startTime)/1000 + " seconds");
+        createFiles();
+       // System.out.println("Created Files");
+       // endTime = System.currentTimeMillis();
+        //System.out.println("Created Files in: " + (endTime - startTime)/1000 + " seconds");
+        codes.stats();
     }
 
     /**
@@ -81,8 +137,6 @@ public class CodingTree {
      * Creates the Huffman tree based on the frequencies
      */
     private void createTree(){
-        System.out.println(keys.toString());
-
         for(String str : keys){
                 tree.add(new HuffmanNode(str, frequencies.get(str)));
         }
@@ -92,8 +146,6 @@ public class CodingTree {
         }
 
         getCodes(tree.peek(), "");
-
-        System.out.println(codes.toString());
     }
 
     /**
@@ -108,25 +160,27 @@ public class CodingTree {
         }
         if(root.getRightN() == null && root.getLeftN() == null){
             codes.put(root.getWord(), code);
+            decodeCodes.put(code, root.getWord());
         }
     }
 
-    private void encode(){
+    /**
+     * Encodes the original text into binary
+     * @return
+     */
+    private BitSet encode(){
         StringBuilder encodedText = new StringBuilder();
 
         for(String str : wordsAndSeparators){
             encodedText.append(codes.get(str));
+            encodedKeys.add(codes.get(str));
         }
 
         bits = encodedText.toString();
 
-        System.out.println(encodedText.toString());
-
         while(encodedText.toString().length() % 8 != 0){
             encodedText.append("1");
         }
-
-        System.out.println(encodedText.toString());
 
         BitSet outputBitSet = new BitSet(encodedText.toString().length());
         int bitCounter = 0;
@@ -138,7 +192,7 @@ public class CodingTree {
             bitCounter++;
         }
 
-        System.out.println(outputBitSet.toString());
+        return outputBitSet;
     }
 
     /**
@@ -162,20 +216,53 @@ public class CodingTree {
      */
     public String decode(String bits, MyHashTable<String, String> codes){
         StringBuilder decodedText = new StringBuilder();
+        StringBuilder currentWord = new StringBuilder();
 
+        for(Character c : bits.toCharArray()){
+            currentWord.append(c);
 
-        for(int i = 0; i < bits.length(); i++){
+            if(codes.containsKey(currentWord.toString())){
+                decodedText.append(codes.get(currentWord.toString()));
 
+                currentWord = new StringBuilder();
+            }
         }
 
         return decodedText.toString();
     }
 
-    private void createFiles(){
+    /**
+     * Creates and writes to the output files
+     * @throws IOException
+     */
+    private void createFiles() throws IOException {
+        //System.out.println("Got to start of createFile");
+        FileOutputStream encodedText = new FileOutputStream("compressed2.txt");
+        FileWriter codes = new FileWriter("codes2.txt");
+        FileWriter decodedText = new FileWriter("decoded2.txt");
 
+        //System.out.println("Got to start of writing the files");
+        encodedText.write(encode().toByteArray());
+        long encodedSize = Files.size(Paths.get("compressed2.txt")) / 1024;
+        //System.out.println("finished encoding");
+        codes.write(this.codes.toString());
+        //System.out.println("finished codes");
+        decodedText.write(decode(bits, decodeCodes));
+        long decodedSize = Files.size(Paths.get("decoded2.txt")) / 1024;
+        //System.out.println("finished decoding");
+
+        encodedText.close();
+        codes.close();
+        decodedText.close();
+        System.out.println("Size of encoded file: " + encodedSize);
+        System.out.println("Size of decoded file: " + decodedSize);
+        //System.out.println("finished writing files");
     }
 }
 
+/**
+ * Self-made node class that follows the properties of the nodes in a Huffman Tree
+ */
 class HuffmanNode implements  Comparable<HuffmanNode>{
     private Integer weight;
 
@@ -185,11 +272,21 @@ class HuffmanNode implements  Comparable<HuffmanNode>{
 
     private HuffmanNode rightN;
 
+    /**
+     * Constructor for leaf nodes that contain a word
+     * @param word
+     * @param weight
+     */
     public HuffmanNode(String word, Integer weight){
         this.word = word;
         this.weight = weight;
     }
 
+    /**
+     * Constructor that combines two other nodes based on their weight(frequencies)
+     * @param leftN
+     * @param rightN
+     */
     public HuffmanNode(HuffmanNode leftN, HuffmanNode rightN){
         this.leftN = leftN;
         this.rightN = rightN;
@@ -197,14 +294,26 @@ class HuffmanNode implements  Comparable<HuffmanNode>{
         this.weight = leftN.weight + rightN.weight;
     }
 
+    /**
+     * Returns the left child node of the current parent node
+     * @return
+     */
     public HuffmanNode getLeftN(){
         return this.leftN;
     }
 
+    /**
+     * Returns the right child node of the current parent node
+     * @return
+     */
     public HuffmanNode getRightN(){
         return this.rightN;
     }
 
+    /**
+     * Returns the word contained in a leaf node
+     * @return
+     */
     public String getWord(){
         return this.word;
     }

@@ -1,3 +1,9 @@
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Scanner;
+
 public class Main {
     /**
      * this  method  will  carry  out  compression  of  a  file  using  the
@@ -11,17 +17,32 @@ public class Main {
      * compression, and the hash table statistics.
      * @param args
      */
-    public static void main(String[] args) {
-        Main test = new Main();
+    public static void main(String[] args) throws  IOException{
+        double startTime = System.currentTimeMillis();
+        Scanner inputfile = new Scanner(new File(args[0]));
+        long orignalSize = Files.size(Paths.get(args[0])) / 1024;
+        System.out.println("Size of original file: " + orignalSize);
+        System.out.println();
 
-        test.testCodingTree();
+        String textString = inputfile.useDelimiter("\\A").next();
+        CodingTree huffman = new CodingTree(textString);
+
+        double endTime = System.currentTimeMillis();
+        System.out.println("Completed Program in: " + (endTime - startTime) + " milliseconds");
+
+        /**
+         * Methods used for testing
+         */
+        //Main test = new Main();
+        //test.testCodingTree();
+        //test.testMyHashTable();
     }
 
     /**
      * o this method tests the  coding  tree  on  a  short  simple  phrase, so  you  can  verify  its
      * correctness.
      */
-    public void testCodingTree(){
+    public void testCodingTree() throws IOException {
         String testMessage = "Yo wahts up! I want to see the stars. Do you? you want some up stars? cause that pleases me you you you you . stars";
 
         CodingTree tree = new CodingTree(testMessage);

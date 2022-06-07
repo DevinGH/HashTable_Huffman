@@ -1,14 +1,14 @@
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 
 public class MyHashTable<Key, Value> {
+    /**
+     * Instance variables
+     */
     private final int capacity;
     private int size;
     private final Key[] keys;
     private final Value[] values;
     private int maxProbe = 0;
-    private LinkedList<Key> keyList = new LinkedList<>();
     private ArrayList<Integer> histogram = new ArrayList<>();
 
     /**
@@ -50,7 +50,6 @@ public class MyHashTable<Key, Value> {
             if(keys[keyHash] == null){
                 int incrementEntry = histogram.get(numProbes) + 1;
                 keys[keyHash] = searchKey;
-                keyList.add(searchKey);
                 size++;
                 histogram.remove(numProbes);
                 histogram.add(numProbes, incrementEntry);
@@ -69,18 +68,15 @@ public class MyHashTable<Key, Value> {
      */
     public Value get(Key searchKey){
         Value output = null;
-        int keyHash = hash(searchKey);
 
         if(searchKey != null){
-            if(containsKey(searchKey)){
-                while(!keys[keyHash].equals(searchKey)){
-                    keyHash = (keyHash + 1) % capacity;
-                }
+            int keyHash = hash(searchKey);
 
-                output = values[keyHash];
-            }else{
-                throw new ArrayStoreException(searchKey + " not in hash table");
+            while(keys[keyHash] != null && !keys[keyHash].equals(searchKey)){
+                keyHash = (keyHash + 1) % capacity;
             }
+
+            output = values[keyHash];
         }
 
         return output;
@@ -92,10 +88,7 @@ public class MyHashTable<Key, Value> {
      * @return
      */
     public boolean containsKey(Key searchKey){
-        if(keys[hash(searchKey)] != null && keyList.contains(searchKey)){
-            return true;
-        }
-        return false;
+        return get(searchKey) != null;
     }
 
     /**
